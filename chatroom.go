@@ -32,12 +32,16 @@ type chatroom struct {
 // websocketの開設かつclientの生成
 func (c *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
+	fmt.Print(r.Proto)
+
+	// 初回時のみでいい
 	// websocketの開設
 	socket, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatalln("websocketの開設に失敗しました", err)
 	}
 
+	// 初回時のみでいい
 	// クライアントの生成
 	client := &client{
 		socket: socket,
@@ -45,12 +49,14 @@ func (c *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		room:   c,
 	}
 
+	// 初回時のみでいい
 	// チャットルームのjoinチャネルにアクセスし、クライアントを入室させる
 	c.join <- client
-	defer func() {
-		c.leave <- client
-	}()
+	// defer func() {
+	// 	c.leave <- client
+	// }()
 
+	// ずっと
 	go client.write()
 	client.read()
 }
@@ -74,6 +80,7 @@ func (c *chatroom) run(){
 	for {
 		// チャネルの動きを監視し、処理を決定する
 		select {
+
 		// joinチャネルに動きがあった(クライアントが入室した)場合
 		case client := <-c.join:
 			// 入室したクライアントを属性に追加
@@ -104,7 +111,7 @@ func (c *chatroom) run(){
 	}
 }
 
-// チャットルームモデルからユーザを取り除く
+// チャットルームモデルからユーザを取り除くプライベート関数
 func (cr *chatroom) remove(cl *client) {
 	// スライスの中身削除
 	clients_remaining := []*client{}

@@ -21,4 +21,11 @@
 - データの永続化
 - chatroom を複数用意する
 
-## 実際に発展させたところ
+## 発展のログ
+
+> ある一つメッセージを送ったらそのユーザはルームを自動的に退出することになる(リロードで再入室する)
+
+200205: 今回のチャットルームへのアクセスはchatroom構造体のServeHTTPメソッドによってハンドリングされる。この中で以下の三点でwebsocketの通信が切断されていたので、これらを取り除いた。
+* chatroom.ServeHTTP()における`defer func() {c.leave <- client}()`
+* client.read()の最後の`c.socket.Close()`
+* client.write()の最後の`c.socket.Close()`

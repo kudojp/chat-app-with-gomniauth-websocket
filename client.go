@@ -41,4 +41,5 @@ func (c *client) write() {
 			break
 		}
 	}
+	// c.socket.Close()
 }
