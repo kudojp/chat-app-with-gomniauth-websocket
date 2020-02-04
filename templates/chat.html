@@ -1,0 +1,195 @@
+<html>
+  <head>
+    <title>
+      chatroom
+    </title>
+    <link
+      rel="stylesheet"
+      href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"
+    />
+    <style>
+      #name {
+        margin-bottom: 10px;
+      }
+
+      img {
+        width: 50px;
+        margin: 2px;
+      }
+
+      #chatbox {
+        padding: 10px;
+      }
+
+      #profilebox {
+        width: 250px;
+      }
+
+      #userprofile {
+        margin: 0px, 0px, 20px;
+      }
+
+      #avatar {
+        float: left;
+      }
+
+      #profile {
+        padding: 5px;
+      }
+
+      #name {
+        height: 50px;
+        display: table-cell;
+        vertical-align: middle;
+      }
+
+      .msgbody {
+        margin: 0px, 0px, 20px;
+        padding: 0px;
+        height: 20%;
+      }
+
+      textarea.text {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- チャット表示スペース -->
+    <div class="text-warning">
+      <blockquote>
+        <h3>ChatApp on WebSocket</h3>
+      </blockquote>
+    </div>
+    <div class="container panel panel-info">
+      <div class="panel-heading">
+        Chat Space
+      </div>
+      <div class="panel-body">
+        <ul id="messages"></ul>
+      </div>
+    </div>
+
+    <!-- 入力スペース -->
+    <div>
+      <form id="chatbox">
+        <div class="container">
+          <div class="panel panel-success" id="profilebox">
+            <div class="panel-heading">
+              <text>YourProfile</text>
+            </div>
+            <div class="panel-body" id="profile">
+              <img src="{{.UserData.avatar_url}}" id="avatar" />
+              <div id="name">
+                {{.UserData.name}}
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-success">
+            <div class="panel-heading">
+              <text>Input Message</text>
+            </div>
+            <div class="panel-body msgbody">
+              <textarea class="text" id="chat"></textarea>
+            </div>
+          </div>
+        </div>
+        <input type="submit" value="送信" class="btn btn-success" />
+        <input
+          type="button"
+          onclick="location.href='./logout'"
+          value="Logout"
+          class="btn btn-warning"
+        />
+      </form>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+    <script>
+      $(function() {
+        // 以下DOMたち
+        var socket = null;
+        var name = $("#name");
+        var msgbox = $("#chat");
+        var messages = $("#messages");
+        var avator = $("#avatar");
+
+        /* 初回起動時の処理 */
+        // websocket未対応のブラウザであれば、チャット機能は使えない
+        if (!window["WebSocket"]) {
+          alert("WebSocketに対応していないブラウザです。");
+          return false;
+          // websocketに対応しているブラウザの場合
+        } else {
+          /* socketの開設 */
+          socket = new WebSocket("ws://localhost:8080/room");
+          // メッセージ受信時の処理を実装
+          socket.onmessage = function(e) {
+            var msg = eval("(" + e.data + ")");
+            messages.append(
+              $("<div>").append(
+                $("<div>")
+                  .append(
+                    $("<img>")
+                      .css({
+                        verticalAlign: "middle"
+                      })
+                      .attr("src", msg.AvatarUrl),
+                    $("<text>").text(msg.Name + " :")
+                  )
+                  .css({
+                    width: 200,
+                    float: "left"
+                  }),
+                $("<div>")
+                  .css({
+                    display: "table-cell",
+                    verticalAlign: "middle"
+                  })
+                  .append(
+                    $("<p>")
+                      .text(msg.Message)
+                      .css({
+                        "font-size": 17,
+                        margin: 10
+                      }),
+                    $("<time>(" + msg.Time + ")</time>")
+                  )
+              )
+            );
+          };
+          // socket終了時の処理を実装
+          socket.onclose = function() {
+            //alert("websocket通信が終了しました。");
+          };
+        }
+        /* 送信ボタン押下時の挙動 */
+        $("#chatbox").submit(function() {
+          // エラーチェック
+          if (!msgbox.val()) {
+            alert("入力がありません。");
+            return false;
+          }
+          if (!socket) {
+            alert("websocketに対応していません。");
+            return false;
+          }
+          /* socketにデータを送る */
+          socket.send(
+            JSON.stringify({
+              Message: msgbox.val(), // 入力されたメッセージ
+              Name: name.text(), // 入力された名前
+              AvatarUrl: avatar.attr("src")
+            })
+          );
+          // メッセージボックスはリセットする
+          msgbox.val("");
+          return false;
+        });
+      });
+    </script>
+  </body>
+</html>

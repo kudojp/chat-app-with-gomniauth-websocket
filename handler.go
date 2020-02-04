@@ -39,7 +39,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//　認証が済んでいればクッキーの値も渡す
 	authCookie, err := r.Cookie("auth")
-	if err != nil {
+	if err != nil && authCookie != nil{
 		data["UserData"] = objx.MustFromBase64(authCookie.Value)
 	}
 
