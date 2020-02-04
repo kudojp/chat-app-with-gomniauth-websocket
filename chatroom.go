@@ -25,7 +25,7 @@ type chatroom struct {
 	forward chan *message // 新着メッセージを一時保存するチャネル
 	join    chan *client // 新入ユーザを一時的に保存するチャネル
 	leave   chan *client // 退出ユーザを一時的に保存するチャネル
-	clients []*client // ルーム内のuser名をキーとするmap(配列でもよい？)
+	clients []*client // ルーム内のuser名をキーとする配列
 }
 
 // chatroomをhttp.handlerに適合させる
@@ -78,14 +78,13 @@ func (c *chatroom) run(){
 		case client := <-c.join:
 			// 入室したクライアントを属性に追加
 			c.clients = append(c.clients, client)
-			fmt.Println("クライアントが入室しました。現在　%x 人のクライアントが存在しています\n",
-				len(c.clients))
+			fmt.Printf("クライアントが入室しました。現在　%x 人のクライアントが存在しています\n", len(c.clients))
 
 		// leaveチャネルに動きがあった(クライアントが退室した)場合
 		case client := <-c.leave:
 			//　クライアントmapから対象クライアントを削除する
 			c.remove(client)
-			fmt.Printf("クライアントが退出しました。現在 %x \n", len(c.clients))
+			fmt.Printf("クライアントが退出しました。現在 %x 人のクライアントが存在しています\n", len(c.clients))
 
 		// forwardチャネルに動きがあった(メッセージを受信した)場合
 		case msg := <-c.forward:
@@ -96,7 +95,7 @@ func (c *chatroom) run(){
 				case target.send <- msg:
 					fmt.Println("メッセージの送信に成功しました")
 				default:
-					// このユーザは取り除く...？
+					// このユーザは取り除く
 					c.remove(target)
 					fmt.Println("メッセージの送信に失敗しました")
 				}

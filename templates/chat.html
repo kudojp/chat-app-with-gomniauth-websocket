@@ -81,7 +81,7 @@
               <text>YourProfile</text>
             </div>
             <div class="panel-body" id="profile">
-              <img src="{{.UserData.avatar_url}}" id="avatar" />
+              <img src={{.UserData.avatar_url}} id="avatar" />
               <div id="name">
                 {{.UserData.name}}
               </div>
@@ -107,16 +107,13 @@
     </div>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-
     <script>
       $(function() {
-        // 以下DOMたち
         var socket = null;
-        var name = $("#name");
-        var msgbox = $("#chat");
-        var messages = $("#messages");
-        var avator = $("#avatar");
-
+        var name = $("#name"); // 取得された名前
+        var msgbox = $("#chat"); // 入力されたメッセージ
+        var messages = $("#messages"); // チャット表示スペース
+        var avatar = $("#avatar"); // 取得された画像
         /* 初回起動時の処理 */
         // websocket未対応のブラウザであれば、チャット機能は使えない
         if (!window["WebSocket"]) {
