@@ -63,7 +63,9 @@ func (cr *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// チャットルームのjoinチャネルにアクセスし、クライアントを入室させる
 	cr.join <- client
 
-	//　初回時のみでいい
+	defer func() {cr.leave <- client}()
+
+	// 初回時のみでいい
 	// チャットルームのメンバー一覧(avatar url)を送信する
 	client.send_members()
 

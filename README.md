@@ -26,13 +26,15 @@ $ go run *.go
 
 ## 発展のログ
 
-> ある一つメッセージを送ったらそのユーザはルームを自動的に退出することになる(リロードで再入室する)
+> ~~ある一つメッセージを送ったらそのユーザはルームを自動的に退出することになる(リロードで再入室する)~~
 
-200205: 今回のチャットルームへのアクセスは chatroom 構造体の ServeHTTP メソッドによってハンドリングされる。この中で以下の三点で websocket の通信が切断されていたので、これらを取り除いた。
+~~200205: 今回のチャットルームへのアクセスは chatroom 構造体の ServeHTTP メソッドによってハンドリングされる。この中で以下の三点で websocket の通信が切断されていたので、これらを取り除いた。~~
 
-- chatroom.ServeHTTP()における`defer func() {c.leave <- client}()`
-- client.read()の最後の`c.socket.Close()`
-- client.write()の最後の`c.socket.Close()`
+- ~~chatroom.ServeHTTP()における`defer func() {c.leave <- client}()`~~
+- ~~client.read()の最後の`c.socket.Close()`~~
+- ~~client.write()の最後の`c.socket.Close()`~~
+
+[のちに追記]以上は全くもって不必要でトンチンカンな処理であった。メッセージ送信時に自動退出してしまうことに関しては他のどこかが問題になっていたようだ。上記３つはのちに復活させた。
 
 > チャットルーム内の各ユーザのプロフィール(と合計ユーザ数)を表示したい
 
@@ -60,3 +62,11 @@ $ go run *.go
 
 - chatroom のメンバー一覧は`{'member_avatars': ['url1', 'url2'] }`
 - 新規メッセージは`{'new_message': '新規メッセージ'}`
+
+なお、chatroom members に関しては、自分自身の avator は表示されない。これは、user が chatroom.serveHTTP()における処理の順番が以下だからである。
+
+1. cookie からユーザ自身に相当するクライアント構造体の初期化
+2. client.send_members()で websocket 通信でメンバー一覧をブラウザに送信
+3. クライアント構造体を join チャネルに追加
+4. join チャネルに追加されたクライアント構造体を chatroom.clients に追加
+

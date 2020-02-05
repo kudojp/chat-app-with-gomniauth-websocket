@@ -33,7 +33,7 @@ func (cl *client) read() {
 			break
 		}
 	}
-	// c.socket.Close()
+	cl.socket.Close()
 }
 
 // roomから送られたメッセージを読み込みwebsocketに書き込む
@@ -53,7 +53,7 @@ func (cl *client) write() {
 			break
 		}
 	}
-	// c.socket.Close()
+	cl.socket.Close()
 }
 
 // クライアントが所属しているchatroomに所属するユーザ一覧(avatarのurl)を
