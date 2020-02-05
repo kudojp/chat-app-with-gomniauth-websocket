@@ -9,10 +9,10 @@ import (
 
 // クライアントモデル
 type client struct {
-	socket *websocket.Conn // websocketへのコネクション
-	send   chan *message   // 送信したメッセージを一時保存するチャネル
-	room   *chatroom       // 所属するチャットルーム
-	name string
+	socket     *websocket.Conn // websocketへのコネクション
+	send       chan *message   // 送信したメッセージを一時保存するチャネル
+	room       *chatroom       // 所属するチャットルーム
+	name       string
 	avatar_url string
 }
 
@@ -43,13 +43,13 @@ func (cl *client) write() {
 		// チャネル内のメッセージをクライアントへ送るjson
 		// user_name、avatar_url、Time, message
 		msg_map := map[string]string{
-			"name" : msg.client.name,
+			"name":       msg.client.name,
 			"avatar_url": msg.client.avatar_url,
-			"time": msg.time,
-			"message": msg.message,
+			"time":       msg.time,
+			"message":    msg.message,
 		}
 
-		if err := cl.socket.WriteJSON(msg_map); err != nil {
+		if err := cl.socket.WriteJSON([]interface{}{"new_message", msg_map}); err != nil {
 			break
 		}
 	}
@@ -64,7 +64,7 @@ func (cl *client) send_members() {
 	for _, each_cl := range cl.room.clients {
 		member_avatars = append(member_avatars, each_cl.avatar_url)
 	}
-	if err := cl.socket.WriteJSON(member_avatars); err != nil {
+	if err := cl.socket.WriteJSON([]interface{}{"member_avatars", member_avatars}); err != nil {
 		panic("Could not send avatar_urls")
 	}
 }

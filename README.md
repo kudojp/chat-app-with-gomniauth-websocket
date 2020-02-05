@@ -54,4 +54,4 @@ $ go run *.go
 ただし、これを実装したところ、以下の問題が生じた
 - WS通信で受信するデータが現状で「入室時のルーム内のユーザ一覧」と「新規メッセージ」の二種類になる
 
-これに対処するために。。。
+これに、[A JSON event-based convention for WebSockets](https://thoughtbot.com/blog/json-event-based-convention-websockets)を参考に対処する。
