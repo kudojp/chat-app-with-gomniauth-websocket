@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 )
 
 const (
@@ -30,7 +31,7 @@ type chatroom struct {
 
 // chatroomをhttp.handlerに適合させる
 // websocketの開設かつclientの生成
-func (c *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (cr *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print(r.Proto)
 
@@ -42,19 +43,29 @@ func (c *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 初回時のみでいい
-	// クライアントの生成
+	// まずheaderからuser情報の抽出
+	authCookie, err := r.Cookie("auth")
+	var user objx.Map
+	if err == nil && authCookie != nil {
+		user = objx.MustFromBase64(authCookie.Value)
+	}
+
+	// クライアントの初期化
 	client := &client{
 		socket: socket,
 		send:   make(chan *message, messageBufferSize),
-		room:   c,
+		room:   cr,
+		name: 	user.Get("name").MustStr(),
+		avatar_url: user.Get("avatar_url").MustStr(),
 	}
 
 	// 初回時のみでいい
 	// チャットルームのjoinチャネルにアクセスし、クライアントを入室させる
-	c.join <- client
-	// defer func() {
-	// 	c.leave <- client
-	// }()
+	cr.join <- client
+
+	//　初回時のみでいい
+	// チャットルームのメンバー一覧(avatar url)を送信する
+	// client.write_members()
 
 	// ずっと
 	go client.write()
@@ -74,7 +85,7 @@ func newRoom() *chatroom {
 }
 
 // チャットルームを起動する
-func (c *chatroom) run(){
+func (cr *chatroom) run(){
 
 	// チャットルームは無限ループで起動する
 	for {
@@ -82,28 +93,28 @@ func (c *chatroom) run(){
 		select {
 
 		// joinチャネルに動きがあった(クライアントが入室した)場合
-		case client := <-c.join:
+		case client := <-cr.join:
 			// 入室したクライアントを属性に追加
-			c.clients = append(c.clients, client)
-			fmt.Printf("クライアントが入室しました。現在　%x 人のクライアントが存在しています\n", len(c.clients))
+			cr.clients = append(cr.clients, client)
+			fmt.Printf("クライアントが入室しました。現在　%x 人のクライアントが存在しています\n", len(cr.clients))
 
 		// leaveチャネルに動きがあった(クライアントが退室した)場合
-		case client := <-c.leave:
+		case client := <-cr.leave:
 			//　クライアントmapから対象クライアントを削除する
-			c.remove(client)
-			fmt.Printf("クライアントが退出しました。現在 %x 人のクライアントが存在しています\n", len(c.clients))
+			cr.remove(client)
+			fmt.Printf("クライアントが退出しました。現在 %x 人のクライアントが存在しています\n", len(cr.clients))
 
 		// forwardチャネルに動きがあった(メッセージを受信した)場合
-		case msg := <-c.forward:
+		case msg := <-cr.forward:
 			fmt.Println("メッセージを受信しました")
 			// 存在するクライアント全てに対してメッセージを送信する
-			for _, target := range c.clients {
+			for _, target := range cr.clients {
 				select {
 				case target.send <- msg:
 					fmt.Println("メッセージの送信に成功しました")
 				default:
 					// このユーザは取り除く
-					c.remove(target)
+					cr.remove(target)
 					fmt.Println("メッセージの送信に失敗しました")
 				}
 			}

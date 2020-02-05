@@ -25,7 +25,22 @@
 
 > ある一つメッセージを送ったらそのユーザはルームを自動的に退出することになる(リロードで再入室する)
 
-200205: 今回のチャットルームへのアクセスはchatroom構造体のServeHTTPメソッドによってハンドリングされる。この中で以下の三点でwebsocketの通信が切断されていたので、これらを取り除いた。
-* chatroom.ServeHTTP()における`defer func() {c.leave <- client}()`
-* client.read()の最後の`c.socket.Close()`
-* client.write()の最後の`c.socket.Close()`
+200205: 今回のチャットルームへのアクセスは chatroom 構造体の ServeHTTP メソッドによってハンドリングされる。この中で以下の三点で websocket の通信が切断されていたので、これらを取り除いた。
+
+- chatroom.ServeHTTP()における`defer func() {c.leave <- client}()`
+- client.read()の最後の`c.socket.Close()`
+- client.write()の最後の`c.socket.Close()`
+
+> チャットルーム内の各ユーザのプロフィール(と合計ユーザ数)を表示したい
+
+200205:
+
+- ~~ユーザは入室時に現在入室中のユーザ情報が(サーバーサイドで既に)レンダリングされた html を取得する~~ (ユーザが chatroom に入室するのは chat.html 取得時ではなく、html をブラウザが受信して WS 通信をはじめた時。したがってユーザの描写はこの WS 通信開設後しか不可能)
+- ユーザは WS 通信を開始時に WS 通信でユーザ一覧情報を受信し、DOM 操作でページを書き換える
+- ユーザが入室 or 退出した際にはその旨を WS でクライアントサイドに送信し、DOM 操作でページを書き換える
+
+これを直す過程でまず以下を行った。
+
+- avaotor の URL は message ではなく、client が持つべき
+- message 構造はどの client によるものなのかを持つべき
+- message 送信の際には user 情報は json に含めない。user 情報は WS 接続確率時にクッキーからサーバーサイドで取り出す。接続後のメッセージはサーバーサイドに置いて user 情報と紐づけた message 構造体を作る。

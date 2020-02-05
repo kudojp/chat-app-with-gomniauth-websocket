@@ -57,12 +57,24 @@
   </head>
 
   <body>
-    <!-- チャット表示スペース -->
+    <!-- ページ表題 -->
     <div class="text-warning">
       <blockquote>
         <h3>ChatApp on WebSocket</h3>
       </blockquote>
     </div>
+
+    <!-- 入室中のメンバー一覧 -->
+    <div class="container panel panel-info">
+      <div class="panel-heading">
+        Chatroom members
+      </div>
+      <div class="member-avatars">
+        <ul id="members"></ul>
+      </div>
+    </div>
+
+    <!-- チャット履歴 -->
     <div class="container panel panel-info">
       <div class="panel-heading">
         Chat Space
@@ -76,17 +88,20 @@
     <div>
       <form id="chatbox">
         <div class="container">
+          <!-- 本人のプロファイル -->
           <div class="panel panel-success" id="profilebox">
             <div class="panel-heading">
               <text>YourProfile</text>
             </div>
             <div class="panel-body" id="profile">
-              <img src={{.UserData.avatar_url}} id="avatar" />
+              <img src="{{.UserData.avatar_url}}" id="avatar" />
               <div id="name">
                 {{.UserData.name}}
               </div>
             </div>
           </div>
+
+          <!-- ルーム内の全ユーザを表示 -->
           <div class="panel panel-success">
             <div class="panel-heading">
               <text>Input Message</text>
@@ -96,6 +111,7 @@
             </div>
           </div>
         </div>
+
         <input type="submit" value="送信" class="btn btn-success" />
         <input
           type="button"
@@ -110,10 +126,8 @@
     <script>
       $(function() {
         var socket = null;
-        var name = $("#name"); // 取得された名前
         var msgbox = $("#chat"); // 入力されたメッセージ
         var messages = $("#messages"); // チャット表示スペース
-        var avatar = $("#avatar"); // 取得された画像
         /* 初回起動時の処理 */
         // websocket未対応のブラウザであれば、チャット機能は使えない
         if (!window["WebSocket"]) {
@@ -134,8 +148,8 @@
                       .css({
                         verticalAlign: "middle"
                       })
-                      .attr("src", msg.AvatarUrl),
-                    $("<text>").text(msg.Name + " :")
+                      .attr("src", msg.avatar_url),
+                    $("<text>").text(msg.name + " :")
                   )
                   .css({
                     width: 200,
@@ -148,12 +162,12 @@
                   })
                   .append(
                     $("<p>")
-                      .text(msg.Message)
+                      .text(msg.message)
                       .css({
                         "font-size": 17,
                         margin: 10
                       }),
-                    $("<time>(" + msg.Time + ")</time>")
+                    $("<time>(" + msg.time + ")</time>")
                   )
               )
             );
@@ -177,9 +191,7 @@
           /* socketにデータを送る */
           socket.send(
             JSON.stringify({
-              Message: msgbox.val(), // 入力されたメッセージ
-              Name: name.text(), // 入力された名前
-              AvatarUrl: avatar.attr("src")
+              message: msgbox.val() // 入力されたメッセージ
             })
           );
           // メッセージボックスはリセットする

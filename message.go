@@ -1,8 +1,7 @@
 package main
 
 type message struct {
-	Name string
-	Message string
-	Time string
-	AvatarUrl string
+	client *client
+	message string
+	time string
 }
