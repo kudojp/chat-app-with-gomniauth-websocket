@@ -65,10 +65,12 @@ func (cr *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//　初回時のみでいい
 	// チャットルームのメンバー一覧(avatar url)を送信する
-	// client.write_members()
+	client.send_members()
 
 	// ずっと
+	// 無限ループでチャネルの変更をWSでクライアントサイドへ送信する
 	go client.write()
+	// 無限ループでWSで受信したメッセージをforwardチャネルに書き込む
 	client.read()
 }
 

@@ -59,6 +59,12 @@ func (cl *client) write() {
 // クライアントが所属しているchatroomに所属するユーザ一覧(avatarのurl)を
 //　WebSocket送信する
 // クライアントがchatroomに入室時一回のみ呼び出される
-func (cl *client) write_members() {
-	// TODO
+func (cl *client) send_members() {
+	member_avatars := []string{}
+	for _, each_cl := range cl.room.clients {
+		member_avatars = append(member_avatars, each_cl.avatar_url)
+	}
+	if err := cl.socket.WriteJSON(member_avatars); err != nil {
+		panic("Could not send avatar_urls")
+	}
 }
