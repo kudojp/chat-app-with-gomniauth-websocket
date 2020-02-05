@@ -67,7 +67,7 @@ func (cr *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// 初回時のみでいい
 	// チャットルームのメンバー一覧(avatar url)を送信する
-	client.send_members()
+	// client.send_members()
 
 	// ずっと
 	// 無限ループでチャネルの変更をWSでクライアントサイドへ送信する
@@ -100,12 +100,18 @@ func (cr *chatroom) run(){
 		case client := <-cr.join:
 			// 入室したクライアントを属性に追加
 			cr.clients = append(cr.clients, client)
+			for _, each_member := range(cr.clients){
+				each_member.send_members()
+			}
 			fmt.Printf("クライアントが入室しました。現在　%x 人のクライアントが存在しています\n", len(cr.clients))
 
 		// leaveチャネルに動きがあった(クライアントが退室した)場合
 		case client := <-cr.leave:
 			//　クライアントmapから対象クライアントを削除する
 			cr.remove(client)
+			for _, each_member := range(cr.clients){
+				each_member.send_members()
+			}
 			fmt.Printf("クライアントが退出しました。現在 %x 人のクライアントが存在しています\n", len(cr.clients))
 
 		// forwardチャネルに動きがあった(メッセージを受信した)場合

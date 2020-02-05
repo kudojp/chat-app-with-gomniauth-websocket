@@ -143,6 +143,7 @@
 
             // 起動時のavator一覧取得時の処理
             if (msg[0] === "member_avatars") {
+              $("#members").empty();
               msg[1].forEach(function(each_url) {
                 $("#members").append(`<img src=${each_url} id="avatar" />`);
               });
