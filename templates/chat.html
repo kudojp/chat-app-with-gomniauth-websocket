@@ -91,7 +91,7 @@
           <!-- 本人のプロファイル -->
           <div class="panel panel-success" id="profilebox">
             <div class="panel-heading">
-              <text>YourProfile</text>
+              <text>Your Profile</text>
             </div>
             <div class="panel-body" id="profile">
               <img src="{{.UserData.avatar_url}}" id="avatar" />
@@ -127,7 +127,6 @@
       $(function() {
         var socket = null;
         var msgbox = $("#chat"); // 入力されたメッセージ
-        var messages = $("#messages"); // チャット表示スペース
         /* 初回起動時の処理 */
         // websocket未対応のブラウザであれば、チャット機能は使えない
         if (!window["WebSocket"]) {
@@ -137,40 +136,52 @@
         } else {
           /* socketの開設 */
           socket = new WebSocket("ws://localhost:8080/room");
-          // メッセージ受信時の処理を実装
+
+          // WebSocketでのメッセージ受信時
           socket.onmessage = function(e) {
             var msg = eval("(" + e.data + ")");
-            messages.append(
-              $("<div>").append(
-                $("<div>")
-                  .append(
-                    $("<img>")
-                      .css({
-                        verticalAlign: "middle"
-                      })
-                      .attr("src", msg.avatar_url),
-                    $("<text>").text(msg.name + ":")
-                  )
-                  .css({
-                    width: 200,
-                    float: "left"
-                  }),
-                $("<div>")
-                  .css({
-                    display: "table-cell",
-                    verticalAlign: "middle"
-                  })
-                  .append(
-                    $("<p>")
-                      .text(msg.message)
-                      .css({
-                        "font-size": 17,
-                        margin: 10
-                      }),
-                    $("<time>(" + msg.time + ")</time>")
-                  )
-              )
-            );
+
+            // 起動時のavator一覧取得時の処理
+            if (msg[0] === "member_avatars") {
+              msg[1].forEach(function(each_url) {
+                $("#members").append(`<img src=${each_url} id="avatar" />`);
+              });
+            }
+
+            // 新規メッセージ受信時の処理
+            if (msg[0] === "new_message") {
+              $("#messages").append(
+                $("<div>").append(
+                  $("<div>")
+                    .append(
+                      $("<img>")
+                        .css({
+                          verticalAlign: "middle"
+                        })
+                        .attr("src", msg[1].avatar_url),
+                      $("<text>").text(msg[1].name + ":")
+                    )
+                    .css({
+                      width: 200,
+                      float: "left"
+                    }),
+                  $("<div>")
+                    .css({
+                      display: "table-cell",
+                      verticalAlign: "middle"
+                    })
+                    .append(
+                      $("<p>")
+                        .text(msg[1].message)
+                        .css({
+                          "font-size": 17,
+                          margin: 10
+                        }),
+                      $("<time>(" + msg[1].time + ")</time>")
+                    )
+                )
+              );
+            }
           };
           // socket終了時の処理を実装
           socket.onclose = function() {
