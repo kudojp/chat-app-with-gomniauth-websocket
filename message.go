@@ -1,7 +1,7 @@
 package main
 
 type message struct {
-	client *client
+	user *user
 	message string
 	time string
 }

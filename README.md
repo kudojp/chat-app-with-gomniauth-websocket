@@ -29,9 +29,9 @@ $ go run *.go
 
 ~~今回のチャットルームへのアクセスは chatroom 構造体の ServeHTTP メソッドによってハンドリングされる。この中で以下の三点で websocket の通信が切断されていたので、これらを取り除いた。~~
 
-- ~~chatroom.ServeHTTP()における`defer func() {c.leave <- client}()`~~
-- ~~client.read()の最後の`c.socket.Close()`~~
-- ~~client.write()の最後の`c.socket.Close()`~~
+- ~~chatroom.ServeHTTP()における`defer func() {c.leave <- user}()`~~
+- ~~user.read()の最後の`c.socket.Close()`~~
+- ~~user.write()の最後の`c.socket.Close()`~~
 
 [のちに追記]以上は全くもって不必要でトンチンカンな処理であった。メッセージ送信時に自動退出してしまうことに関しては他のどこかが問題になっていたようだ。上記３つはのちに復活させた。
 
@@ -43,8 +43,8 @@ $ go run *.go
 
 これを直す過程でまず以下を行った。
 
-- avatar の URL は message ではなく、client が持つべき
-- message 構造はどの client によるものなのかを持つべき
+- avatar の URL は message ではなく、user が持つべき
+- message 構造はどの user によるものなのかを持つべき
 - message 送信の際には user 情報は json に含めない。user 情報は WS 接続確率時にクッキーからサーバーサイドで取り出す。接続後のメッセージはサーバーサイドに置いて user 情報と紐づけた message 構造体を作る。
 
 終了後、以下を実装した。
@@ -63,13 +63,13 @@ $ go run *.go
 なお、~~chatroom members に関しては、自分自身の avator は表示されない~~(される)。これは、user が chatroom.serveHTTP()における処理の順番が以下だからである。
 
 1. cookie からユーザ自身に相当するクライアント構造体の初期化
-2. ~~client.send_members()で websocket 通信でメンバー一覧をブラウザに送信~~(取り除く)
+2. ~~user.send_members()で websocket 通信でメンバー一覧をブラウザに送信~~(取り除く)
 3. クライアント構造体を join チャネルに追加
-4. join チャネルに追加されたクライアント構造体を chatroom.clients に追加(ここで client.send_members していることにのちに気づく)
+4. join チャネルに追加されたクライアント構造体を chatroom.users に追加(ここで user.send_members していることにのちに気づく)
 
 > (200206)ユーザがチャットルームに入室した時にはチャットルーム内の他のユーザに通知したい。具体的には Chatroom members の avator 一覧を更新したい
 
-chatroom.run()内の無限ループにおいて、join チャネルと leave チャネルとのそれぞれで新しい client 要素が追加された時に、その client と同じ chatroom に所属する全ての client に対して client.send_members を実行することで実行可能である。
+chatroom.run()内の無限ループにおいて、join チャネルと leave チャネルとのそれぞれで新しい user 要素が追加された時に、その user と同じ chatroom に所属する全ての user に対して user.send_members を実行することで実行可能である。
 
 > (200206)ユーザ認証機能をまともにする。
 
