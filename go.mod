@@ -7,7 +7,7 @@ require (
 	github.com/cosiner/argv v0.0.1 // indirect
 	github.com/gin-gonic/gin v1.5.0 // indirect
 	github.com/go-delve/delve v1.3.2 // indirect
-	github.com/gorilla/websocket v1.4.1
+	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/gorm v1.9.12 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
